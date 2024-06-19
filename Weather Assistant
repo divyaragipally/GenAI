@@ -1,0 +1,139 @@
+import streamlit as st
+import requests
+import datetime
+
+def get_weather_data(city, weather_api_key):
+    base_url = "https://api.openweathermap.org/data/2.5/weather?"
+    complete_url = base_url + "appid=" + weather_api_key + "&q=" + city
+    response = requests.get(complete_url)
+    return response.json()
+
+def generate_weather_description(data):
+    try:
+        temperature = data['main']['temp'] - 273.15
+        description = data['weather'][0]['description']
+        wind_speed = data['wind']['speed']
+        breeze = breeze_status(wind_speed)
+        return f"The current weather in your city {description}, {breeze} with a temperature of {temperature:.1f}°C."
+    except Exception as e:
+        return str(e)
+    
+def breeze_status(wind_speed):
+    if wind_speed < 1:
+        return "Calm"
+    elif wind_speed < 5:
+        return "Light breeze"
+    elif wind_speed < 11:
+        return "Gentle breeze"
+    elif wind_speed < 19:
+        return "Moderate breeze"
+    elif wind_speed < 29:
+        return "Fresh breeze"
+    elif wind_speed < 39:
+        return "Strong breeze"
+    elif wind_speed < 50:
+        return "High wind"
+    elif wind_speed < 62:
+        return "Gale"
+    elif wind_speed < 75:
+        return "Strong gale"
+    else:
+        return "Storm"
+    
+def get_weekly_forecast(city, weather_api_key):
+    base_url = "https://api.openweathermap.org/data/2.5/forecast?"
+    complete_url = base_url + "appid=" + weather_api_key + "&q=" + city
+    response = requests.get(complete_url)
+    return response.json()
+
+def display_weekly_forecast(data):
+    try:
+        st.write("Weekly Weather Forecast")
+        displayed_dates = set()
+         
+        c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
+        with c1:
+            st.metric("","Date")
+        with c2:
+            st.metric("","Temperature")
+        with c3:
+            st.metric("", "Weather Condition")  
+        with c4:
+            st.metric("","Precipitation")
+        with c5:
+            st.metric("", "Wind Speed")
+        with c6:
+            st.metric("", "Humidity")
+        with c7:
+            st.metric("", "UV Index")
+            
+        for day in data['list']:
+            date = datetime.datetime.fromtimestamp(day['dt']).strftime('%A, %B %d')
+            if date not in displayed_dates:
+                displayed_dates.add(date)
+                
+                min_temp = day['main']['temp_min'] - 273.15
+                max_temp = day['main']['temp_max'] - 273.15
+                description = day['weather'][0]['description']
+                main_weather = day['weather'][0]['main']
+                precipitation = day.get('rain', 'None') if 'rain' in day else day.get('snow', 'None')
+                wind_speed = day['wind'].get('speed', 'Unknown') if 'wind' in day else 'Unknown'
+                humidity = day['main'].get('humidity', 'Unknown')
+                uv_index = day.get('uv_index', 'Unknown')
+                
+                precipitation_label = "None" if precipitation == 'None' else f"{precipitation} mm"
+                wind_speed_label = "Unknown" if wind_speed == 'Unknown' else f"{wind_speed} m/s"
+                humidity_label = "Unknown" if humidity == 'Unknown' else f"{humidity}%"
+                uv_index_label = "Unknown" if uv_index == 'Unknown' else uv_index
+                
+                with c1:
+                    st.write(f"{date}")
+                with c2:
+                    st.write(f"Min: {min_temp:.1f}°C\nMax: {max_temp:.1f}°C")
+                with c3:
+                    st.write(f"{description.capitalize()}")
+                with c4:
+                    st.write(f"{precipitation_label}")
+                with c5:
+                    st.write(f"{wind_speed_label}")
+                with c6:
+                    st.write(f"{humidity_label}")
+                with c7:
+                    st.write(f"{uv_index_label}")
+                    
+    except Exception as e:
+        st.error("Error in displaying weekly forecast:" + str(e))
+
+def main():
+    st.sidebar.title("Weather Forecasting with LLM")
+    city = st.sidebar.text_input("Enter city name")
+
+    weather_api_key = "6ec4c3a3f2fc502d15fdd18a1080a25b"
+    
+    submit = st.sidebar.button("Get weather")   
+    
+    
+    if submit:
+        st.title("Weather updates for " + city + " is:")
+        with st.spinner('Fetching weather data..'):
+            weather_data = get_weather_data(city , weather_api_key)
+            
+            if weather_data.get("cod") != 404:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Temperature ", f"{weather_data['main']['temp'] - 273.5:.2f}°c")
+                    st.metric("Humidity", f"{weather_data['main']['humidity']}%")
+                with col2:
+                    st.metric("Pressure ", f"{weather_data['main']['pressure']}hPa")
+                    st.metric("Wind speed", f"{weather_data['wind']['speed']}m/s")
+                    
+                weather_description = generate_weather_description(weather_data)
+                st.write(weather_description)
+            else:
+                st.error("City not found or an error occurred!")
+                
+        weekly_forecast_data = get_weekly_forecast(city, weather_api_key)
+        display_weekly_forecast(weekly_forecast_data)
+                
+if __name__ == "__main__":
+    main()
