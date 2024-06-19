@@ -1,0 +1,47 @@
+import gradio as gr
+
+# Define your chatbot function
+def chatbot(input_text):
+    # Define some responses based on input_text
+    if "hello" in input_text.lower() or "hi" in input_text.lower():
+        response = "Hello! How can I help you?"
+    elif "how are you?" in input_text.lower():
+        response = "I'm just a chatbot, but thanks for asking!"
+    elif "who are you?" in input_text.lower():
+        response = "I'm a chatbot designed to assist you with various tasks and answer your questions."
+    elif "what's your name" in input_text.lower():
+        response = "I'm just a chatbot, I don't have a name."
+    elif "I'm confused" in input_text.lower():
+         response = "It's alright. I'm here to help. What are you confused about?"
+    elif "bye" in input_text.lower():
+        response = "Goodbye! Have a great day!"
+    elif "Can you assist me with something?" in input_text.lower():
+        response = "Of course! What do you need help with?"
+    elif "what are the symptoms of the common cold?" in input_text.lower():
+        response = "Common cold symptoms include runny nose, sore throat, and cough."
+    elif "thank you" in input_text.lower() or "thanks" in input_text.lower():
+        response = "You're welcome!"
+    elif "how's the weather today?" in input_text.lower():
+        response = "I'm not equipped to check the weather, but I hope it's nice wherever you are!"
+    elif "I'm feeling sad." in input_text.lower():
+        response = "I'm sorry to hear that. Is there anything specific I can do to help?"
+    elif "life is so frustrating!" in input_text.lower():
+        response = "I understand. Sometimes things can be challenging. Is there anything I can do to assist you?"
+    elif "Tell me a joke." in input_text.lower():
+        response = "Sure, here's one: Why don't skeletons fight each other? They don't have the guts!"
+    else:
+        response = "I'm sorry, I didn't understand that."
+    
+    return response
+
+# Create the Gradio interface
+chatbot_ui = gr.Interface(
+    fn=chatbot,
+    inputs = gr.Textbox(lines=7, label="Input Text"),
+    outputs = "text",
+    title="Simple Chatbot",
+    description="Type a message to chat with the bot."
+)
+
+# Launch the interface
+chatbot_ui.launch()
